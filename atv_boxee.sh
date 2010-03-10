@@ -76,14 +76,14 @@ function bx()
   show=$(camelcase $show)
   title=$(camelcase $title)
 
-  newName="${show} - ${season}x${episode}"
+  local newName="${show} - ${season}x${episode}"
 
   if [ -n "$title" ]
   then
     newName="$newName - $title"
   fi
 
-  destination="${bxtv}${show}/Season ${season}/${newName}.${ext}"
+  local destination="${bxtv}${show}/Season ${season}/${newName}.${ext}"
   echo "$original   =>   $destination"
 
   # escape spaces (why so many \'s ?)
