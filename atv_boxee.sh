@@ -37,7 +37,7 @@ function bx()
     return 0
   fi
 
-  if [ ! -f $1 ]
+  if [ ! -f "$1" ]
   then
     echo "File not found '$1'"
     return 2
