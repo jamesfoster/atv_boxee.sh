@@ -58,7 +58,18 @@ function bx()
   # find season and episode
   [[ "$name" =~ (.*)s([0-9]{2})e([0-9]{2})(.*) ]] ||
   [[ "$name" =~ (.*)([0-9]{2})x([0-9]{2})(.*) ]] ||
-  { echo Unable to determine season and episode; return 3; }
+  {
+    echo
+    echo Unable to determine season and episode
+    read -p "Do you wish to stage this file [yn]? " answer
+    if [ "$answer" == "y" ]
+    then
+      bxstage "$1"
+      return
+    else
+      return 3
+    fi
+  }
 
   local show=${BASH_REMATCH[1]}
   local season=${BASH_REMATCH[2]}
@@ -72,6 +83,12 @@ function bx()
   show=`echo $show | sed s/\ *$//`
   title=`echo $title | sed s/\ *$//`
 
+  if [ -z "$title" ]
+  then
+    echo
+    read -p "Enter a title (optional): " title
+  fi
+
   # capitalise the first letter of each word
   show=$(camelcase $show)
   title=$(camelcase $title)
@@ -84,6 +101,7 @@ function bx()
   fi
 
   local destination="${bxtv}${show}/Season ${season}/${newName}.${ext}"
+  echo
   echo "$original   =>   $destination"
 
   # escape spaces (why so many \'s ?)
