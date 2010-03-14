@@ -1,6 +1,14 @@
 bxserver=frontrow@appletv.local
-bxstage=/Volumes/Newcastle/Stage/
-bxtv=/Volumes/Newcastle/TV/
+
+bxstagedir="Stage"
+bxtvdir="TV"
+bxshowdir="\${show}/Season \${season}"
+bxshowfile="\${show} - \${season}x\${episode} - \${title}"
+
+bxroot="/Volumes/\${bxvolume}"
+bxstage="\${bxroot}/\${bxstagedir}"
+bxtv="\${bxroot}/\${bxtvdir}"
+bxshowpath="\${bxtv}/\${bxshowdir}/\${bxshowfile}"
 
 function camelcase() {
   local word
@@ -21,11 +29,32 @@ function camelcase() {
   echo $result
 }
 
+# recursive evaluation
+function evalr() {
+
+  if [[ "$*" =~ "\$" ]]
+  then
+    local result=$(eval echo "$*")
+
+    if [ "$result" == "$*" ]
+    then
+      echo "$*"
+      return 0
+    else
+      evalr "$result"
+    fi
+  else
+    echo "$*"
+    return 0
+  fi
+}
+
 function bxssh() {
   ssh $bxserver $@
 }
 
 function bxstage() {
+  echo
   scp "$1" $bxserver:$bxstage
 }
 
@@ -48,7 +77,7 @@ function bx()
   local name=${original%.*}
 
   # remove symbols
-  name=`echo "$name" | sed "s/[.,_-]/ /g"`
+  name=$(echo "$name" | sed "s/[.,_-]/ /g")
 
   # turn off case sensitivity
   shopt -q nocasematch
@@ -77,11 +106,11 @@ function bx()
   local title=${BASH_REMATCH[4]}
 
   # strip everything after HDTV from title
-  title=${title%hdtv*}
+  title=${title%[Hh][Dd][Tt][Vv]*}
 
   # remove trailing spaces
-  show=`echo $show | sed s/\ *$//`
-  title=`echo $title | sed s/\ *$//`
+  show=$(echo $show | sed s/\ *$//)
+  title=$(echo $title | sed s/\ *$//)
 
   if [ -z "$title" ]
   then
@@ -93,20 +122,19 @@ function bx()
   show=$(camelcase $show)
   title=$(camelcase $title)
 
-  local newName="${show} - ${season}x${episode}"
+  local destination="$(evalr $bxshowpath)"
 
-  if [ -n "$title" ]
-  then
-    newName="$newName - $title"
-  fi
+  # remove trailing spaces/symbols
+  destination=$(echo $destination | sed s/[-\ .,_]*$//)
 
-  local destination="${bxtv}${show}/Season ${season}/${newName}.${ext}"
+  destination=$destination.$ext
   echo
   echo "$original   =>   $destination"
 
-  # escape spaces (why so many \'s ?)
-  destination=`echo $destination | sed s/\ /\\\\\\\\\ /g`
+  # escape spaces
+  destination=$(echo $destination | sed s/\ /\\\\\ /g)
 
+  echo
   scp "$1" $bxserver:"$destination"
 
   # turn case sensitivity back on
