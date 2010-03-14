@@ -18,7 +18,7 @@ This will try to find the show name, season, episode and title of the file and c
 
 for example:
 
-    frontrow@appletv.local:/Volumes/MyDriveName/TV/Lost/Season 06/Lost - 06x07 - Dr Linus.avi
+    frontrow@appletv.local:/Volumes/MyVolume/TV/Lost/Season 06/Lost - 06x07 - Dr Linus.avi
 
 The original file will remain unchanged.
 
