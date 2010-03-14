@@ -8,7 +8,11 @@ Open ~/.profile in your preferred editor and type the following
     . path/to/atv_boxee.sh
     bxvolume=MyVolume
 
-You can then transfer files to the server using
+Then, to simply ssh to your server, just type:
+
+    bx
+
+You can transfer files to the server using
 
     bx <filename>
 
