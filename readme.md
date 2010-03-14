@@ -18,7 +18,7 @@ This will try to find the show name, season, episode and title of the file and c
 
 for example:
 
-    frontrow@appletv.local:/Volumes/MyVolume/TV/Lost/Season 06/Lost - 06x07 - Dr Linus.avi
+    frontrow@appletv.local:/Volumes/MyVolume/TV/PurePwnage/Season 01/PurePwnage - 01x10 - Teh Best Day Ever.avi
 
 The original file will remain unchanged.
 
@@ -32,7 +32,7 @@ This format is ideal for [Boxee](http://boxee.tv/ "Boxee") to recognise and inde
 
 The above example would now be copied to:
 
-    user@mysshserver.local:/Volumes/MyVolume/My Shows/Lost/Season 02/Lost s02e07 Dr Linus.avi
+    user@mysshserver.local:/Volumes/MyVolume/My Shows/PurePwnage/Season 01/PurePwnage s01e10 Teh Best Day Ever.avi
 
 Enjoy.
 
