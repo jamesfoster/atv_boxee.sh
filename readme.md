@@ -38,6 +38,6 @@ The above example would now be copied to:
 
     user@mysshserver.local:/Volumes/MyVolume/My Shows/PurePwnage/Season 01/PurePwnage s01e10 Teh Best Day Ever.avi
 
-You can use any bash expression here. For example, you could use "\${season#0}" to remove the leading 0 from the season parameter. See the [bash reference manual](http://www.gnu.org/software/bash/manual/bashref.html#Shell-Parameter-Expansion "Bash reference"] for details.
+You can use any bash expression here. For example, you could use "\${season#0}" to remove the leading 0 from the season parameter. See the [bash reference manual](http://www.gnu.org/software/bash/manual/bashref.html#Shell-Parameter-Expansion "Bash reference") for details.
 
 Enjoy.
