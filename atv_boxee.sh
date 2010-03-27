@@ -54,8 +54,11 @@ function bxssh() {
 }
 
 function bxstage() {
+  local destination=$(evalr $bxstage)
   echo
-  scp "$1" $bxserver:$bxstage
+  echo "$1   =>   $destination"
+  echo
+  scp "$1" $bxserver:$destination
 }
 
 function bx()
