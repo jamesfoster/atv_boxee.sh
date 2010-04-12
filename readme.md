@@ -26,7 +26,13 @@ for example:
 
 The original file will remain unchanged.
 
-This format is ideal for [Boxee](http://boxee.tv/ "Boxee") to recognise and index the file. This location can be changed by overriding any of the variables defined at the top of the script. For instance you could put the following in your .profile:
+If the directory you're copying to doesn't exist use `bxmd` to created the directory first and then copy it.
+
+    bxmd <filename>
+
+This format is ideal for [Boxee](http://boxee.tv/ "Boxee") to recognise and index the file. 
+
+The location can be changed by overriding any of the variables defined at the top of the script. For instance you could put the following in your .profile:
 
     . path/to/atv_boxee.sh
     bxvolume=MyVolume

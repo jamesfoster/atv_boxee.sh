@@ -8,7 +8,8 @@ bxshowfile="\${show} - \${season}x\${episode} - \${title}"
 bxroot="/Volumes/\${bxvolume}"
 bxstage="\${bxroot}/\${bxstagedir}"
 bxtv="\${bxroot}/\${bxtvdir}"
-bxshowpath="\${bxtv}/\${bxshowdir}/\${bxshowfile}"
+bxshow="\${bxtv}/\${bxshowdir}/"
+bxshowpath="\${bxshow}/\${bxshowfile}"
 
 function camelcase() {
   local word
@@ -61,13 +62,15 @@ function bxstage() {
   scp "$1" $bxserver:$destination
 }
 
-function bx()
+function bxtvshow()
 {
-  if [ -z "$1" ]
-  then
-    bxssh
-    return 0
-  fi
+  export original=
+  export ext=
+  export name=
+  export show=
+  export season=
+  export episode=
+  export title=
 
   if [ ! -f "$1" ]
   then
@@ -75,12 +78,12 @@ function bx()
     return 2
   fi
 
-  local original=$(basename "$1")
-  local ext=${original##*.}
-  local name=${original%.*}
+  original=$(basename "$1")
+  ext=${original##*.}
+  name=${original%.*}
 
   # remove symbols
-  name=$(echo "$name" | sed "s/[.,_-]/ /g")
+  name=$(echo "$name" | sed -e "s/[.,_-]/ /g" -e "s/\\[/ /g" -e "s/\\]/ /g")
 
   # turn off case sensitivity
   shopt -q nocasematch
@@ -91,6 +94,50 @@ function bx()
   [[ "$name" =~ (.*)s([0-9]{2})e([0-9]{2})(.*) ]] ||
   [[ "$name" =~ (.*)([0-9]{2})x([0-9]{2})(.*) ]] ||
   {
+    return 3
+  }
+
+  # turn case sensitivity back on
+  if [ $case == 1 ]
+  then
+    shopt -u nocasematch
+  fi  
+
+  show=${BASH_REMATCH[1]}
+  season=${BASH_REMATCH[2]}
+  episode=${BASH_REMATCH[3]}
+  title=${BASH_REMATCH[4]}
+
+  # strip everything after HDTV from title
+  title=${title%[Hh][Dd][Tt][Vv]*}
+
+  # remove trailing spaces
+  show=$(echo $show | sed s/\ *$//)
+  title=$(echo $title | sed s/\ *$//)
+}
+
+function bx()
+{
+  local original
+  local ext
+  local name
+  local show
+  local season
+  local episode
+  local title
+
+  if [ -z "$1" ]
+  then
+    bxssh
+    return 0
+  fi
+
+  bxtvshow "$1"
+  local error=$?
+
+  local answer
+  if [ "$error" == "3" ]
+  then
     echo
     echo Unable to determine season and episode
     read -p "Do you wish to stage this file [yn]? " answer
@@ -101,24 +148,25 @@ function bx()
     else
       return 3
     fi
-  }
+  fi
 
-  local show=${BASH_REMATCH[1]}
-  local season=${BASH_REMATCH[2]}
-  local episode=${BASH_REMATCH[3]}
-  local title=${BASH_REMATCH[4]}
+  if [ "$error" != "0" ]
+  then
+    return $error
+  fi
 
-  # strip everything after HDTV from title
-  title=${title%[Hh][Dd][Tt][Vv]*}
-
-  # remove trailing spaces
-  show=$(echo $show | sed s/\ *$//)
-  title=$(echo $title | sed s/\ *$//)
 
   if [ -z "$title" ]
   then
     echo
     read -p "Enter a title (optional): " title
+  else
+    echo
+    read -p "Change title? \"${title}\" (y/n): " answer
+    if [ "$answer" == "y" ]
+    then
+      read -p "Enter a new title: " title
+    fi
   fi
 
   # capitalise the first letter of each word
@@ -132,7 +180,7 @@ function bx()
 
   destination=$destination.$ext
   echo
-  echo "$original   =>   $destination"
+  echo "Copying \"$original\"  =>  \"$destination\""
 
   # escape spaces
   destination=$(echo $destination | sed s/\ /\\\\\ /g)
@@ -140,12 +188,44 @@ function bx()
   echo
   scp "$1" $bxserver:"$destination"
 
-  # turn case sensitivity back on
-  if [ $case == 1 ]
-  then
-    shopt -u nocasematch
-  fi
-
   return 0
 
 }
+
+function bxmd()
+{
+  local original
+  local ext
+  local name
+  local show
+  local season
+  local episode
+  local title
+
+  bxtvshow "$1"
+  local error=$?
+
+  if [ "$error" == "3" ]
+  then
+    echo
+    echo Unable to determine season and episode
+    return 3
+  fi
+
+  if [ "$error" != "0" ]
+  then
+    return $error
+  fi
+
+  local destination="$(evalr $bxshow)"
+
+  echo
+  echo Creating directory \"$destination\" on $bxserver
+  echo
+
+  ssh $bxserver mkdir -pv \"$destination\" | tr '\n' '\0' | xargs -0 -n 1 echo creating
+
+  bx "$1"
+}
+
+
