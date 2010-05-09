@@ -71,7 +71,7 @@ function bxconnect() {
     fi
   fi
 
-  expect $bxpath/password.expect "$cmd" "$bxpassword" "$destination" $@
+  expect $bxpath/password.expect "$cmd" "$bxpassword" "$destination" "$@"
 
   local error=$?
 
@@ -91,7 +91,7 @@ function bxstage() {
   echo
   echo "$1   =>   $destination"
   echo
-  bxconnect scp $bxserver:$destination "$1"
+  bxconnect scp $bxserver:"$destination" "$1"
 }
 
 function bxtvshow()
@@ -269,7 +269,7 @@ function bxmd()
   echo Creating directory \"$destination\" on $bxserver
   echo
 
-  ssh $bxserver mkdir -pv \"$destination\" | tr '\n' '\0' | xargs -0 -n 1 echo creating
+  bxconnect ssh $bxserver mkdir -pv \"$destination\"
 
   bx "$1"
 }
@@ -305,7 +305,7 @@ function bxls()
   echo Looking in	 \"$destination\" on $bxserver
   echo
 
-  ssh $bxserver ls -al \"$destination\"
+  bxconnect ssh $bxserver ls -al \"$destination\"
 
   echo
   local answer
