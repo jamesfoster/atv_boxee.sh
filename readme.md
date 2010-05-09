@@ -5,7 +5,8 @@ How to use
 
 Open ~/.profile in your preferred editor and type the following
 
-    . path/to/atv_boxee.sh
+    . path/to/script/atv_boxee.sh
+    bxpath=path/to/script
     bxvolume=MyVolume
 
 Then, to simply ssh to your server, just type:
@@ -26,13 +27,19 @@ for example:
 
 The original file will remain unchanged.
 
+The script will remember your password between executions during the current session. To avoid having to type your password at all set the `bxpassword` variable in your `.profile`. This lets you write a script to copy multiple files without having to type your password in multiple times. for example:
+
+    for file in *.avi ; do bx -auto $file ; done
+
+The `-auto` flag prevents the script from asking any questions.
+
 If the directory you're copying to doesn't exist use `bxmd` to created the directory first and then copy it.
 
     bxmd <filename>
 
 This format is ideal for [Boxee](http://boxee.tv/ "Boxee") to recognise and index the file. 
 
-The location can be changed by overriding any of the variables defined at the top of the script. For instance you could put the following in your .profile:
+The location can be changed by overriding any of the variables defined at the top of the script. For instance you could put the following in your `.profile`:
 
     . path/to/atv_boxee.sh
     bxvolume=MyVolume

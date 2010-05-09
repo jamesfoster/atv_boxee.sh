@@ -1,4 +1,7 @@
 bxserver=frontrow@appletv.local
+bxvolume="MyVolume"
+bxpath="~"
+bxpassword=""
 
 bxstagedir="Stage"
 bxtvdir="TV"
@@ -50,8 +53,37 @@ function evalr() {
   fi
 }
 
+function bxconnect() {
+  local cmd=$1
+  local destination=$2
+  shift
+  shift
+
+  if [ "$bxpassword" == "" ]
+  then
+    stty -echo
+    read -p "Please enter your password: " bxpassword
+    echo
+    stty echo
+    if [ "$bxpassword" == "" ]
+    then
+      return 0
+    fi
+  fi
+
+  expect $bxpath/password.expect "$cmd" "$bxpassword" "$destination" $@
+
+  local error=$?
+
+  # invalid password
+  if [ "$error" == "1" ]
+  then
+    bxpassword=""
+  fi
+}
+
 function bxssh() {
-  ssh $bxserver $@
+  bxconnect ssh $bxserver $@
 }
 
 function bxstage() {
@@ -59,7 +91,7 @@ function bxstage() {
   echo
   echo "$1   =>   $destination"
   echo
-  scp "$1" $bxserver:$destination
+  bxconnect scp $bxserver:$destination "$1"
 }
 
 function bxtvshow()
@@ -125,6 +157,13 @@ function bx()
   local season
   local episode
   local title
+  local auto
+
+  if [ "$1" == "-auto" ]
+  then
+    auto=true
+    shift
+  fi
 
   if [ -z "$1" ]
   then
@@ -140,6 +179,11 @@ function bx()
   then
     echo
     echo Unable to determine season and episode
+    if [ $auto ]
+    then
+      return 3
+    fi
+
     read -p "Do you wish to stage this file [yn]? " answer
     if [ "$answer" == "y" ]
     then
@@ -155,17 +199,19 @@ function bx()
     return $error
   fi
 
-
-  if [ -z "$title" ]
+  if [ -z "$auto" ]
   then
-    echo
-    read -p "Enter a title (optional): " title
-  else
-    echo
-    read -p "Change title? \"${title}\" (y/n): " answer
-    if [ "$answer" == "y" ]
+    if [ -z "$title" ]
     then
-      read -p "Enter a new title: " title
+      echo
+      read -p "Enter a title (optional): " title
+    else
+      echo
+      read -p "Change title? \"${title}\" (y/n): " answer
+      if [ "$answer" == "y" ]
+      then
+        read -p "Enter a new title: " title
+      fi
     fi
   fi
 
@@ -186,7 +232,7 @@ function bx()
   destination=$(echo $destination | sed s/\ /\\\\\ /g)
 
   echo
-  scp "$1" $bxserver:"$destination"
+  bxconnect scp $bxserver:"$destination" "$1"
 
   return 0
 
@@ -228,4 +274,45 @@ function bxmd()
   bx "$1"
 }
 
+function bxls()
+{
+  local original
+  local ext
+  local name
+  local show
+  local season
+  local episode
+  local title
+
+  bxtvshow "$1"
+  local error=$?
+
+  if [ "$error" == "3" ]
+  then
+    echo
+    echo Unable to determine season and episode
+    return 3
+  fi
+
+  if [ "$error" != "0" ]
+  then
+    return $error
+  fi
+
+  local destination="$(evalr $bxshow)"
+
+  echo
+  echo Looking in	 \"$destination\" on $bxserver
+  echo
+
+  ssh $bxserver ls -al \"$destination\"
+
+  echo
+  local answer
+  read -p "Copy file [yn]? " answer
+  if [ "$answer" == "y" ]
+  then
+    bx "$1"
+  fi
+}
 
